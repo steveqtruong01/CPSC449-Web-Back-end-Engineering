@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -52,6 +53,25 @@ public class BookController {
         books.add(book);
         return books;
     }
+
+    // search by title
+    @GetMapping("/books/search")
+    public List<Book> searchByTitle(
+            @RequestParam(required = false, defaultValue = "") String title
+    ) {
+        if(title.isEmpty()) {
+            return books;
+        }
+
+        return books.stream()
+                .filter(book -> book.getTitle().toLowerCase().contains(title.toLowerCase()))
+                .collect(Collectors.toList());
+
+    }
+
+    // price range
+
+    // sort
 
 
 
