@@ -70,6 +70,19 @@ public class BookController {
     }
 
     // price range
+    @GetMapping("/books/price-range")
+    public List<Book> getBooksByPrice(
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice
+    ) {
+        return books.stream()
+                .filter(book -> {
+                    boolean min = minPrice == null || book.getPrice() >= minPrice;
+                    boolean max = maxPrice == null || book.getPrice() <= maxPrice;
+
+                    return min && max;
+                }).collect(Collectors.toList());
+    }
 
     // sort
 
