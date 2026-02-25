@@ -51,6 +51,7 @@ public class BookController {
     // create a new book
     @PostMapping("/books")
     public List<Book> createBook(@RequestBody Book book) {
+        book.setId(nextId++);
         books.add(book);
         return books;
     }
@@ -114,6 +115,131 @@ public class BookController {
 
 
     }
+// New Codes
+
+    @PutMapping("/books/{id}")
+    public Book updateBook (@PathVariable Long id, @RequestBody Book updatedBook) {
+        for (Book book : books) {
+            if (book.getId().equals(id)) {
+                book.setTitle(updatedBook.getTitle());
+                book.setAuthor(updatedBook.getAuthor());
+                book.setPrice(updatedBook.getPrice());
+
+                return book;
+            }
+        }
+        return null;
+    }
+
+    @PatchMapping("/books/{id}")
+    public Book patchBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+        for (Book book : books) {
+            if (book.getId().equals(id)) {
+                if (updatedBook.getTitle() != null) {
+                    book.setTitle(updatedBook.getTitle());
+                }
+                if (updatedBook.getAuthor() != null) {
+                    book.setAuthor(updatedBook.getAuthor());
+                }
+                if (updatedBook.getPrice() != 0) {
+                    book.setPrice(updatedBook.getPrice());
+                }
+                return book;
+
+
+            }
+        }
+
+        return null;
+    }
+
+
+
+
+    @DeleteMapping("/books/{id}")
+    public List<Book> deleteBook(@PathVariable Long id) {
+        books.removeIf(book -> book.getId().equals(id));
+
+        return books;
+    }
+
+    @GetMapping("/books/paged")
+    public List<Book> getBooksPaged(
+            @RequestParam int page,
+            @RequestParam int per_page
+    ) {
+        int start = (page - 1) * per_page;
+        int end = Math.min(start + per_page, books.size());
+
+        if(start >= books.size()) {
+            return new ArrayList<>();
+        }
+
+        return books.subList(start, end);
+    }
+
+
+
+    @GetMapping("/books/advanced")
+    public List<Book> advancedBooks (
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false, defaultValue = "title") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String order,
+            @RequestParam int page,
+            @RequestParam int per_page
+
+    ) {
+        List <Book> result = books.stream()
+                .filter(b -> title == null || b.getTitle().toLowerCase().contains(title.toLowerCase()))
+                .filter(b -> author == null || b.getAuthor().toLowerCase().contains(author.toLowerCase()))
+                .filter(b -> minPrice == null || b.getPrice() >= minPrice)
+                .filter(b -> maxPrice == null || b.getPrice() <= maxPrice)
+                .collect(Collectors.toList());
+
+        Comparator<Book> comparator;
+        switch (sortBy.toLowerCase()) {
+            case "author":
+                comparator = Comparator.comparing(Book::getAuthor);
+                break;
+            case "price":
+                comparator = Comparator.comparing(Book::getPrice);
+                break;
+            case "title":
+            default:
+                comparator = Comparator.comparing(Book::getTitle);
+                break;
+
+        }
+
+        if (order.equalsIgnoreCase("desc")) {
+            comparator = comparator.reversed();
+        }
+
+        result = result.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
+
+        int start = (page - 1) * per_page;
+        int end = Math.min(start + per_page, result.size());
+
+        if (start >= result.size()) {
+            return new ArrayList<>();
+        }
+        return result.subList(start, end);
+
+
+
+
+
+
+
+    }
+
+
+
 
 
 }
